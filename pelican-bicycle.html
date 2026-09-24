@@ -7,6 +7,7 @@
 <meta name="description" content="用 SVG 绘制的动画：一只鹈鹕骑着自行车沿海边木栈道兜风。">
 <style>
   :root {
+    color-scheme: light;
     /* 界面 */
     --page: #bfe3f2;
     --panel: rgba(255, 255, 255, 0.8);
@@ -68,8 +69,71 @@
     --sun-y: 0px;
     --night: 0;
   }
-  /* 场景：黄昏 */
-  :root[data-theme="dusk"] {
+  /* 场景：黄昏（跟随查看者的深色主题；页面上的按钮也能切换） */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --page: #2b2b55;
+      --panel: rgba(32, 30, 60, 0.8);
+      --panel-line: rgba(255, 255, 255, 0.14);
+      --ink: #f4effa;
+      --ink-soft: #bcb4d2;
+      --btn: rgba(255, 255, 255, 0.09);
+      --btn-hover: rgba(255, 255, 255, 0.17);
+      --focus: #8ab4ff;
+
+      --sky-0: #1f2455;
+      --sky-1: #6c4f8e;
+      --sky-2: #ffab78;
+      --sun-core: #fff0c6;
+      --sun-edge: #ff984c;
+      --sun-glow: #ffb074;
+      --sun-y: 205px;
+      --cloud: #ffc4ad;
+      --cloud-shade: #9b7597;
+      --far-land: #6a5a8b;
+      --horizon: #ffc39a;
+      --sea-0: #3a3f78;
+      --sea-1: #57558f;
+      --sea-2: #a47d98;
+      --wave: #ffd9c2;
+      --glitter: #ffcf88;
+      --foam: #ffe6db;
+      --wet-sand: #af8b7c;
+      --sand-0: #c9a48a;
+      --sand-1: #d5b194;
+      --sand-fore-0: #d2ac8e;
+      --sand-fore-1: #b69177;
+      --plank-a: #9a6f58;
+      --plank-b: #8c634f;
+      --plank-c: #a67a61;
+      --seam: #5a3c30;
+      --fascia: #6b4839;
+      --fascia-hi: #87604b;
+      --post: #55382c;
+      --post-cap: #644335;
+      --rope: #c5a994;
+      --lamp: #2a2f3f;
+      --lamp-glass: #ffe49a;
+      --grass-0: #7a8c58;
+      --grass-1: #596e46;
+      --palm-leaf: #3d6e4f;
+      --palm-leaf-2: #2c563f;
+      --palm-trunk: #8b6753;
+      --palm-ring: #6b4c3f;
+      --feather: #fff6ef;
+      --feather-mid: #f6e5dc;
+      --feather-shade: #cfb8c2;
+      --feather-line: #d6bdc5;
+      --feather-far: #d3bcc5;
+      --outline: #403a56;
+      --frame: #de4450;
+      --frame-hi: #ff8e89;
+      --night: 1;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
     --page: #2b2b55;
     --panel: rgba(32, 30, 60, 0.8);
     --panel-line: rgba(255, 255, 255, 0.14);
@@ -172,7 +236,7 @@
 
   /* 界面 */
   .hud {
-    position: fixed; top: max(14px, env(safe-area-inset-top)); left: max(16px, env(safe-area-inset-left));
+    position: fixed; top: calc(14px + env(safe-area-inset-top, 0px)); left: calc(16px + env(safe-area-inset-left, 0px));
     padding: 10px 14px; border-radius: 14px;
     background: var(--panel); border: 1px solid var(--panel-line);
     backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
@@ -182,7 +246,7 @@
   .hud h1 { margin: 0; font-size: 17px; line-height: 1.3; letter-spacing: .04em; }
   .hud p { margin: 2px 0 0; font-size: 12px; color: var(--ink-soft); }
   .controls {
-    position: fixed; left: 50%; bottom: max(16px, env(safe-area-inset-bottom)); transform: translateX(-50%);
+    position: fixed; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%);
     display: flex; align-items: center; gap: 6px; padding: 6px;
     border-radius: 999px; background: var(--panel); border: 1px solid var(--panel-line);
     backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
@@ -218,10 +282,10 @@
     .speed output { display: none; }
   }
   @media (max-height: 480px) {
-    .hud { padding: 6px 10px; top: max(8px, env(safe-area-inset-top)); }
+    .hud { padding: 6px 10px; top: calc(8px + env(safe-area-inset-top, 0px)); }
     .hud h1 { font-size: 14px; }
     .hud p { display: none; }
-    .controls { bottom: max(8px, env(safe-area-inset-bottom)); padding: 4px; }
+    .controls { bottom: calc(8px + env(safe-area-inset-bottom, 0px)); padding: 4px; }
     .controls button { height: 34px; min-width: 34px; }
     #btn-play { width: 34px; }
   }
@@ -1156,7 +1220,8 @@
   let view = { x0: 0, x1: 1200 };
   function layout() {
     const w = window.innerWidth || 1200, h = window.innerHeight || 700;
-    const topPx = 8, botPx = h < 480 ? 56 : 80;         // 底部留给控制栏
+    const bar = document.querySelector('.controls').getBoundingClientRect();
+    const topPx = 8, botPx = clamp(h - bar.top + 6, 40, h * 0.4);   // 底部留给控制栏
     const scale = Math.min(h / 600, (h - topPx - botPx) / (RIDER_BOTTOM - RIDER_TOP), w / SAFE_W);
     const vw = w / scale, vh = h / scale;
     const x0 = CX - vw / 2;
@@ -1414,20 +1479,17 @@
     ding();
   }
   const btnTheme = $('btn-theme');
-  const store = { get: (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* 忽略 */ } } };
+  const root = document.documentElement;
   const darkMQ = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
-  function applyTheme(theme) {
-    document.documentElement.setAttribute('data-theme', theme);
-    const dusk = theme === 'dusk';
+  const isDusk = () => { const t = root.getAttribute('data-theme'); return t ? t === 'dark' : !!(darkMQ && darkMQ.matches); };
+  function syncThemeButton() {
+    const dusk = isDusk();
     $('ico-moon').setAttribute('display', dusk ? 'none' : 'inline');
     $('ico-sun').setAttribute('display', dusk ? 'inline' : 'none');
     $('theme-label').textContent = dusk ? '白天' : '黄昏';
     btnTheme.setAttribute('aria-label', dusk ? '切换到白天' : '切换到黄昏');
   }
-  function toggleTheme() {
-    const next = document.documentElement.getAttribute('data-theme') === 'dusk' ? 'day' : 'dusk';
-    applyTheme(next); store.set('pelican-theme', next);
-  }
+  function toggleTheme() { root.setAttribute('data-theme', isDusk() ? 'light' : 'dark'); syncThemeButton(); }
   function feedFish() { if (!feed.active) { feed.active = true; feed.t = 0; glanceT = -1; } }
 
   btnPlay.addEventListener('click', () => setPlaying(!state.playing));
@@ -1435,7 +1497,8 @@
   $('btn-bell').addEventListener('click', ringBell);
   $('btn-fish').addEventListener('click', feedFish);
   btnTheme.addEventListener('click', toggleTheme);
-  if (darkMQ && darkMQ.addEventListener) darkMQ.addEventListener('change', (e) => { if (!store.get('pelican-theme')) applyTheme(e.matches ? 'dusk' : 'day'); });
+  if (darkMQ && darkMQ.addEventListener) darkMQ.addEventListener('change', syncThemeButton);
+  if (window.MutationObserver) new MutationObserver(syncThemeButton).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
   $('bell').style.cursor = 'pointer';
   $('bell').addEventListener('click', ringBell);
   $('basket').style.cursor = 'pointer';
@@ -1455,8 +1518,9 @@
   window.addEventListener('resize', layout);
 
   /* ================= 启动 ================= */
-  document.documentElement.classList.add('no-anim');
-  applyTheme(store.get('pelican-theme') || (darkMQ && darkMQ.matches ? 'dusk' : 'day'));
+  if (!root.lang) root.lang = 'zh-CN';
+  root.classList.add('no-anim');
+  syncThemeButton();
   buildBike();
   buildDecor();
   layout();
@@ -1473,7 +1537,7 @@
   }
   render();
   requestAnimationFrame(frame);
-  requestAnimationFrame(() => requestAnimationFrame(() => document.documentElement.classList.remove('no-anim')));
+  requestAnimationFrame(() => requestAnimationFrame(() => root.classList.remove('no-anim')));
 })();
 </script>
 </body>
